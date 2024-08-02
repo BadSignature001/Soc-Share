@@ -5,7 +5,6 @@ const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const os = require('os');
 
 const app = express();
 const server = http.createServer(app);
@@ -21,48 +20,26 @@ app.use('/uploads', express.static('uploads'));
 
 const PORT = process.env.PORT || 5000;
 
-// Function to get local IP addresses
-const getLocalIPs = () => {
-  const interfaces = os.networkInterfaces();
-  const localIPs = new Set();
-  
-  for (const key of Object.keys(interfaces)) {
-    for (const iface of interfaces[key]) {
-      if (iface.family === 'IPv4' && !iface.internal) {
-        localIPs.add(iface.address);
-      }
-    }
-  }
-  
-  return localIPs;
-};
-
-const localIPs = getLocalIPs();
+let clients = [];
 
 io.on('connection', (socket) => {
   console.log(`New client connected: ${socket.id}`);
 
-  // Get the client's IP address (this is a simplistic approach; real-world implementations may differ)
-  const clientIP = socket.request.headers['x-forwarded-for'] || socket.request.connection.remoteAddress;
-  console.log(`Client IP: ${clientIP}`);
-
   // Assign a random name to the new client
   const randomName = `User-${Math.floor(Math.random() * 1000)}`;
-  const newClient = { id: socket.id, name: randomName, ip: clientIP };
-  
-  // Add the client only if they're on the same network
-  if (localIPs.has(clientIP)) {
-    clients.push(newClient);
-    socket.emit('clients', clients.filter(client => client.id !== socket.id));
-    socket.broadcast.emit('new-client', newClient);
-  } else {
-    console.log(`Client ${socket.id} is not on the same network.`);
-    socket.disconnect();
-  }
+  clients.push({ id: socket.id, name: randomName });
+
+  // Notify the new client about the existing clients
+  socket.emit('clients', clients.filter(client => client.id !== socket.id));
+
+  // Notify existing clients about the new client
+  socket.broadcast.emit('new-client', { id: socket.id, name: randomName });
 
   socket.on('disconnect', () => {
     console.log(`Client disconnected: ${socket.id}`);
     clients = clients.filter(client => client.id !== socket.id);
+
+    // Notify all clients about the disconnected client
     io.emit('client-disconnected', socket.id);
   });
 
@@ -86,5 +63,7 @@ io.on('connection', (socket) => {
     });
   });
 });
+
+
 
 server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
