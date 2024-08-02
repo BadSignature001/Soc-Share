@@ -58,12 +58,15 @@ function App() {
       setFileToSend(file);
       if (peer) {
         sendFile(file);
+      } else {
+        console.error('No peer connection found');
       }
     }
   };
 
   const handleClientClick = (clientId) => {
     setSelectedClient(clientId);
+    initiatePeerConnection(clientId);
     document.getElementById('fileInput').click();
   };
 
@@ -73,6 +76,8 @@ function App() {
       const fileData = reader.result;
       if (peer) {
         peer.send(fileData);
+      } else {
+        console.error('No peer connection found');
       }
     };
     reader.readAsArrayBuffer(file);
@@ -85,10 +90,12 @@ function App() {
     });
 
     newPeer.on('signal', (data) => {
+      console.log('Sending signaling data:', data);
       socket.emit('webrtc-signal', data);
     });
 
     newPeer.on('data', (data) => {
+      console.log('Receiving data:', data);
       const blob = new Blob([data]);
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -124,11 +131,7 @@ function App() {
                 <li 
                   key={client.id} 
                   className="cursor-pointer p-4 mb-2 bg-gray-100 rounded hover:bg-gray-200 transition"
-                  onClick={() => {
-                    setSelectedClient(client.id);
-                    initiatePeerConnection(client.id);
-                    document.getElementById('fileInput').click();
-                  }}
+                  onClick={() => handleClientClick(client.id)}
                 >
                   {client.name}
                 </li>
