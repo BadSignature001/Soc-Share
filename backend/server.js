@@ -58,7 +58,7 @@ io.on('connection', (socket) => {
       console.log(`File saved: ${filePath}`);
       io.to(recipientId).emit('receive-file', {
         fileName: fileName,
-        fileUrl: `http://localhost:${PORT}/uploads/${fileName}`
+        fileUrl: `https://soc-share-backend.onrender.com/uploads/${fileName}`
       });
     });
   });
