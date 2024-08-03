@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import 'tailwindcss/tailwind.css';
 import Navbar from './components/Navbar';
 
-const socket = io('http://localhost:5000');
+const socket = io('https://soc-share-frontend.onrender.com');
 
 function App() {
   const [clients, setClients] = useState([]);
