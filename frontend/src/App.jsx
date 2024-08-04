@@ -56,17 +56,14 @@ function App() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file && selectedClient) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const fileData = event.target.result.split(',')[1];
-        console.log(`Sending file: ${file.name} to ${selectedClient}`);
-        socket.emit('send-file', {
-          fileName: file.name,
-          fileData: fileData,
-          recipientId: selectedClient
-        });
-      };
-      reader.readAsDataURL(file);
+      const formData = new FormData();
+      formData.append('file', file);
+
+      console.log(`Sending file: ${file.name} to ${selectedClient}`);
+      socket.emit('send-file', {
+        file: formData,
+        recipientId: selectedClient
+      });
     }
   };
 
@@ -79,7 +76,7 @@ function App() {
     <>
     <Navbar/>
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center">
-      <h1 className="text-4xl font-bold mb-8">Avaliable Clients</h1>
+      <h1 className="text-4xl font-bold mb-8">Available Clients</h1>
       
       {loading ? (
         <div className="flex items-center justify-center">
